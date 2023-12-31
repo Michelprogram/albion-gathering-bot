@@ -7,7 +7,7 @@ import cv2 as cv
 
 def run():
     sleep(2)
-    model = AlbionDetection(debug=True, confidence=0.8)
+    model = AlbionDetection(debug=True, confidence=0.9)
     while True:
         model.predict()
 
@@ -20,12 +20,12 @@ def run():
 
 def gathering():
     sleep(2)
-    model = AlbionDetection(debug=False, confidence=0.8)
+    model = AlbionDetection(debug=True, confidence=0.8)
     interaction = Interaction(model)
 
-    x, y, resource, img = model.predict()
+    x, y, resource, _ = model.predict()
 
-    interaction.gathering(x, y, resource, img)
+    interaction.gathering(x, y, resource)
     while True:
 
         if model.debug:
@@ -44,28 +44,29 @@ def onMouse(event, x, y, flags, param):
 def crop_border_resource():
     img = cv.imread("640x640_resource.png", cv.IMREAD_GRAYSCALE)
 
-    top_x, top_y = 265, 366
-    bottom_x, bottom_y = 293, 372
+    top_x, top_y = 265, 365
+    bottom_x, bottom_y = 293, 410
 
     cuted = img[top_y:bottom_y, top_x:bottom_x]
 
-    cv.imwrite("images/cropped_bar_resource.png", cuted)
+    cv.imwrite("images/cropped_bar_resource_2.png", cuted)
 
 
 def crop_image():
-    img = cv.imread("640x640_no_resource.png", cv.IMREAD_GRAYSCALE)
-    border = cv.imread("images/cropped_bar_resource.png", cv.IMREAD_UNCHANGED)
+    img = cv.imread("640x640_resource.png", cv.IMREAD_GRAYSCALE)
+    border = cv.imread("images/cropped_bar_resource_2.png", cv.IMREAD_UNCHANGED)
 
     top_x, top_y = 265, 365
     bottom_x, bottom_y = 293, 410
 
     cuted = img[top_y:bottom_y, top_x:bottom_x]
 
-    result = cv.matchTemplate(cuted, border, cv.TM_CCORR_NORMED)
+    result = cv.matchTemplate(cuted, border, cv.TM_CCOEFF_NORMED)
     min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
 
     print('Best match top left position: %s' % str(max_loc))
     print('Best match confidence: %s' % max_val)
+    print(min_val, max_val, min_loc, max_loc)
 
     # Get the size of the needle image. With OpenCV images, you can get the dimensions
     # via the shape property. It returns a tuple of the number of rows, columns, and
@@ -111,7 +112,7 @@ def read_cropped_image():
 
         cuted = cv.cvtColor(cuted, cv.COLOR_BGR2GRAY)
 
-        result = cv.matchTemplate(cuted, border, cv.TM_CCORR_NORMED)
+        result = cv.matchTemplate(cuted, border, cv.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
 
         print('Best match top left position: %s' % str(max_loc))
@@ -143,7 +144,8 @@ def testWindowsCapture():
 
 
 if __name__ == "__main__":
+    #run()
     #read_cropped_image()
     gathering()
-    # crop_image()
-    # crop_border_resource()
+    #crop_image()
+    #crop_border_resource()

@@ -16,15 +16,9 @@ class Interaction:
     def __init__(self, model):
         self.model: AlbionDetection = model
         self.current_gathering: Gathering | None = None
-        self.gathering_box = self.__compute_box_loader()
 
+        self.debug = self.model.debug
         self.img_border_resource = cv.imread("images/cropped_bar_resource.png", cv.IMREAD_UNCHANGED)
-
-
-    def __compute_box_loader(self):
-        game_window = self.model.window_capture.get_window_information()
-
-        return 200, 300, 200, 200
 
 
     def toggle_ath(self):
@@ -33,40 +27,58 @@ class Interaction:
     def go_on_mount(self):
         pyautogui.press('a')
 
-    def __crop_image_resource(self, img):
+    def __crop_image_resource(self):
         top_x, top_y = 265, 365
         bottom_x, bottom_y = 293, 410
 
+        img = self.model._process_image(self.model.window_capture.screenshot())
+
         return cv.cvtColor(img, cv.COLOR_BGR2GRAY)[top_y:bottom_y, top_x:bottom_x]
 
-    def __mining(self, first_image):
-        print("Start mining...")
+    def __is_mining(self):
+        img = self.__crop_image_resource()
 
-        cuted = self.__crop_image_resource(first_image)
+        result = cv.matchTemplate(img, self.img_border_resource, cv.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv.minMaxLoc(result)
 
-        result = cv.matchTemplate(cuted, self.img_border_resource, cv.TM_CCORR_NORMED)
-        _, _, _, max_loc = cv.minMaxLoc(result)
+        if self.debug:
+            print(max_val)
 
-        print(f"Max loc : {max_loc}")
-        while max_loc == (0, 1):
+        return max_val >= 0.8
 
-            img = self.__crop_image_resource(self.model.window_capture.screenshot())
+    def __mining(self):
+        if self.debug:
+            print("Start Minning...")
 
-            result = cv.matchTemplate(img, self.img_border_resource, cv.TM_CCORR_NORMED)
-            _, _, _, max_loc = cv.minMaxLoc(result)
-            print(f"Mining {max_loc}...")
+        while self.__is_mining() is True:
             sleep(2)
+            pass
 
-        print("Mining complete")
+        print(self.__is_mining())
 
-    def gathering(self, x, y, resource, img):
+        if self.debug:
+            print("Minning completed")
+
+    def __moving(self):
+
+        if self.debug:
+            print("Start mooving...")
+
+        while self.__is_mining() is False:
+            pass
+
+        if self.debug:
+            print("Mooving completed")
+
+    def gathering(self, x, y, resource):
         self.toggle_ath()
         self.current_gathering = Gathering(x, y, resource)
 
         pyautogui.leftClick(self.current_gathering.x, self.current_gathering.y, interval=0.5)
-        print("Travel to resource...")
-        pyautogui.moveTo(10,10)
-        sleep(1)
-        self.__mining(img)
+        pyautogui.moveTo(10, 10)
+
+        self.__moving()
+        self.__mining()
+
         self.toggle_ath()
 
