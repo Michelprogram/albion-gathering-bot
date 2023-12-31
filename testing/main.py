@@ -11,8 +11,8 @@ def saveImg(name:str, img:np.ndarray):
     cv.imwrite(path, img)
 
 def drawRectangle():
-    default_image = cv.imread('ressources/stone.png', cv.IMREAD_REDUCED_COLOR_2)
-    looking_for = cv.imread('ressources/stone-alone.png', cv.IMREAD_REDUCED_COLOR_2)
+    default_image = cv.imread('../ressources/stone.png', cv.IMREAD_REDUCED_COLOR_2)
+    looking_for = cv.imread('../ressources/stone-alone.png', cv.IMREAD_REDUCED_COLOR_2)
 
     formats = [cv.TM_SQDIFF,cv.TM_CCOEFF, cv.TM_CCORR_NORMED,cv.TM_CCORR,cv.TM_CCOEFF_NORMED]
 
@@ -47,8 +47,8 @@ def findMultipleImages():
 
     positions = []
 
-    default_image = cv.imread('ressources/stone.png', cv.IMREAD_UNCHANGED)
-    looking_for = cv.imread('ressources/stone-alone.png', cv.IMREAD_UNCHANGED)
+    default_image = cv.imread('../ressources/stone.png', cv.IMREAD_UNCHANGED)
+    looking_for = cv.imread('../ressources/stone-alone.png', cv.IMREAD_UNCHANGED)
 
     formats = [cv.TM_SQDIFF,cv.TM_CCOEFF, cv.TM_CCORR_NORMED,cv.TM_CCORR,cv.TM_CCOEFF_NORMED]
 
@@ -100,7 +100,7 @@ def realTimeCapture():
 
     windowCapture = WindowCapture()
 
-    looking_for = cv.imread('ressources/stone-island.png', cv.IMREAD_UNCHANGED)
+    looking_for = cv.imread('../ressources/stone-island.png', cv.IMREAD_UNCHANGED)
 
     looking_for = cv.cvtColor(looking_for,cv.COLOR_RGB2BGR)
     while True:

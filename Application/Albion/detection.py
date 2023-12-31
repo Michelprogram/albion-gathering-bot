@@ -1,12 +1,8 @@
 import cv2 as cv
-import pyautogui
 import torch
-from capture import WindowCapture
-from time import sleep,time
+from Application.Capture.Factory import CaptureFactory
+from time import time
 from math import sqrt
-from pyautogui import rightClick, size
-import mss
-from PIL import Image
 
 
 class AlbionDetection:
@@ -29,7 +25,7 @@ class AlbionDetection:
         self.model_name = model_name
         self.model = self._load_model()
         self.classes = self._load_classes()
-        self.window_capture = WindowCapture(window_name)
+        self.window_capture = CaptureFactory(window_name).capture
         self.debug = debug
         self.confidence = confidence
         self.character_position_X = self.IMG_SIZE / 2
@@ -75,10 +71,10 @@ class AlbionDetection:
 
         self.__cross_line(img)
 
-        cv.drawMarker(img, (int(self.character_position_X), int(self.character_position_Y)), (255,255,255), cv.MARKER_DIAMOND,10,2)
+        cv.drawMarker(img, (int(self.character_position_X), int(self.character_position_Y)), (255, 255, 255),
+                      cv.MARKER_DIAMOND, 10, 2)
         self.__marker_closest(img, coordinates)
-        #cv.imshow("Boxes", img)
-
+        # cv.imshow("Boxes", img)
 
     def __cross_line(self, img):
         cv.line(img, (0, int(self.character_position_X)), (self.IMG_SIZE, int(self.character_position_X)),
@@ -90,12 +86,11 @@ class AlbionDetection:
         closest = self.closest_point(coordinates)
 
         if closest is not None:
-
             cv.drawMarker(img, (int(closest[0]), int(closest[1])), (37, 150, 190), cv.MARKER_CROSS, 10, 2)
-            cv.putText(img, "Closest", (int(closest[0]), int(closest[1]) - 25), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
+            cv.putText(img, "Closest", (int(closest[0]), int(closest[1]) + 50), cv.FONT_HERSHEY_SIMPLEX, 0.5,
+                       (0, 255, 0), 2)
 
-
-    def closest_point(self,coordinates):
+    def closest_point(self, coordinates):
 
         if len(coordinates) == 0:
             return None
@@ -105,18 +100,19 @@ class AlbionDetection:
 
         centers = []
 
-        for index,coord in enumerate(coordinates):
+        for index, coord in enumerate(coordinates):
             x1, y1, x2, y2 = coord[:4].int()
 
             center_x, center_y = ((x2 - x1) / 2) + x1, ((y2 - y1) / 2) + y1
 
-            computed = sqrt(abs(self.character_position_X - center_x) ** 2 + abs(self.character_position_Y - center_y) ** 2)
+            computed = sqrt(
+                abs(self.character_position_X - center_x) ** 2 + abs(self.character_position_Y - center_y) ** 2)
 
             if computed < min:
                 min = computed
                 position = index
 
-            centers.append((center_x, center_y))
+            centers.append((center_x, center_y, coord[5].int()))
 
         return centers[position]
 
@@ -133,9 +129,9 @@ class AlbionDetection:
         :return: Loaded YOLOv5 model.
         """
         try:
-            model = torch.hub.load("yolov5/", 'custom',
-                                   path=f"yolov5/runs/train/yolov5s_results/weights/{self.model_name}",
-                                   source="local", force_reload=True, verbose=True)
+            model = torch.hub.load('yolov5', 'custom', path=self.MODEL_NAME, source="local", force_reload=True,
+                                   verbose=True)
+
         except Exception as e:
             raise Exception(f"Failed to load the model: {e}")
 
@@ -152,29 +148,13 @@ class AlbionDetection:
 
         if self.debug:
             self.draw_boxes(img, coordinates)
-            cv.putText(img, f'FPS {1 / (time() - loop_time)}', (10,10),cv.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
+            cv.putText(img, f'FPS {1 / (time() - loop_time)}', (10, 10), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255),
+                       1)
             cv.imshow("Founded", img)
             loop_time = time()
-        else:
-            center_x, center_y = self.closest_point(coordinates)
 
-            center_x, center_y = self.__convert_coordinates_to_screen_position(center_x, center_y)
+        center_x, center_y, ressource = self.closest_point(coordinates)
 
-            pyautogui.rightClick(int(center_x), int(center_y))
+        center_x, center_y = self.__convert_coordinates_to_screen_position(center_x, center_y)
 
-
-def main():
-    sleep(2)
-    model = AlbionDetection(debug=True, confidence=0.3)
-    while True:
-        model.predict()
-
-        if model.debug:
-
-            if cv.waitKey(1) == ord('q'):
-                cv.destroyAllWindows()
-                break
-
-
-if __name__ == "__main__":
-    main()
+        return center_x, center_y, ressource, img
