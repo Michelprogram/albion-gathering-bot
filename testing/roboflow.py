@@ -1,5 +1,5 @@
 def robofloww():
-    rf = Roboflow(api_key="5nanhYltFBEGkcZ15ekd")
+    rf = Roboflow(api_key="api")
     project = rf.workspace().project("albiongathering")
     model = project.version(3).model
 
@@ -10,7 +10,7 @@ def robofloww():
 
 
 def deploy_roboflow():
-    rf = Roboflow(api_key="5nanhYltFBEGkcZ15ekd")
+    rf = Roboflow(api_key="api")
     project = rf.workspace().project("albiongathering")
     version = project.version(4)
     version.deploy("yolov5", "yolov5")
